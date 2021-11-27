@@ -1,0 +1,6 @@
+[
+    name: 'PeterParker'
+    apiKey: 'GfFFvxflTIR6VDXwdsCGotU0Qv0FJla82aWXOGnxMyo'
+    scripts:
+        'marmiton.js': 'dist/index.js'
+]

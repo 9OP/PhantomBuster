@@ -1,0 +1,23 @@
+{
+  "name": "phamtombuster",
+  "version": "1.0.0",
+  "description": "take home project",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc --build",
+    "clean": "tsc --build --clean",
+    "dev": "concurrently -k -n \"Tsc,PhantomBuster\" -p\"[{name}]\" -c \"blue,cyan\" \"tsc --watch\" \"phantombuster\""
+  },
+  "author": "Martin Guyard",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^16.11.10",
+    "@types/puppeteer": "^1.6.2",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
+    "concurrently": "^6.4.0",
+    "eslint": "^8.3.0",
+    "phantombuster-sdk": "^0.0.1",
+    "typescript": "^4.5.2"
+  }
+}
