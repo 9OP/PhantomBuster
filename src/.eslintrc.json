@@ -8,5 +8,5 @@
   "parser": "@typescript-eslint/parser",
   "parserOptions": { "project": ["./tsconfig.json"] },
   "plugins": ["@typescript-eslint"],
-  "rules": { "no-console": 1 }
+  "rules": { "no-console": 0 }
 }
