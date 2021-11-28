@@ -11,8 +11,9 @@
   "author": "Martin Guyard",
   "license": "ISC",
   "devDependencies": {
+    "@types/ajv": "^1.0.0",
     "@types/node": "^16.11.10",
-    "@types/puppeteer": "^1.6.2",
+    "@types/puppeteer": "^5.4.4",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
     "concurrently": "^6.4.0",
