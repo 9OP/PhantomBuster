@@ -1,6 +1,5 @@
 "phantombuster package: 5";
 "phantombuster command: nodejs";
-"phantombuster flags: save-folder";
 
 import Buster from "phantombuster";
 import puppeteer from "puppeteer";
@@ -80,6 +79,7 @@ const ARGS_SCHEMA = {
         enum: _filterTime,
       },
     },
+    page: { type: "array", items: { type: "number" } },
   },
   required: ["search"],
 };
@@ -101,6 +101,7 @@ interface IFilter {
   particularity?: typeof _filterParticularity[number][]; // prt
   cooking?: typeof _filterCooking[number][]; // rct
   time?: typeof _filterTime[number][]; // ttlt
+  page?: number[];
 }
 
 // Convert a param to the query parameters accepted by marmiton
@@ -120,16 +121,18 @@ const get_query_param = (param: keyof IFilter) => {
       return "rct";
     case "time":
       return "ttl";
+    case "page":
+      return "page";
   }
 };
 
-// Build the search url with query parameters
-const get_url = (search: IFilter): string => {
+// Build the search urls with query parameters
+const get_urls = (search: IFilter): string[] => {
   const query = Object.keys(search).reduce((acc: string, el: string) => {
     const key = el as keyof IFilter; // it is not as dangerous as it seems since search is indeed an IFilter
     const query_param = get_query_param(key);
 
-    if (search[key] == null) {
+    if (search[key] == null || key === "page") {
       return acc;
     }
 
@@ -143,10 +146,13 @@ const get_url = (search: IFilter): string => {
     return acc;
   }, "");
 
-  return `${MARMITON_URL}/recettes/recherche.aspx?${query}`;
+  const url = `${MARMITON_URL}/recettes/recherche.aspx?${query}`;
+  if (search.page) {
+    return search.page.map((page) => `${url}&page=${page}`);
+  }
+  return [url];
 };
 
-// add pages
 const scrap = async (url: string): Promise<IRecipe[]> => {
   const browser = await puppeteer.launch({
     // This is needed to run Puppeteer in a Phantombuster container
@@ -182,20 +188,32 @@ const scrap = async (url: string): Promise<IRecipe[]> => {
   return recipes;
 };
 
+// Remove null or undefined attributes
+function clean<T>(obj: T): T {
+  for (const key in obj) {
+    if (obj[key] == null) {
+      delete obj[key];
+    }
+  }
+  return obj;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const validate = (args: any): IFilter => {
   const ajv = Ajv({ allErrors: true });
   const valid = ajv.validate(ARGS_SCHEMA, args);
 
   if (valid) {
-    return {
+    const filter: IFilter = {
       search: args["search"],
       type: args["type"],
       difficulty: args["difficulty"],
       expense: args["expense"],
       cooking: args["cooking"],
       time: args["time"],
+      page: args["page"],
     };
+    return clean(filter);
   } else {
     throw ajv.errors;
   }
@@ -207,22 +225,18 @@ const main = async () => {
 
   // Validates args
   const args = validate(agent.argument);
-
+  console.log(args);
   // Build query
-  const url = get_url(args);
+  const urls = get_urls(args);
 
   // Scrap
-  const recipes = await scrap(url);
+  let recipes: IRecipe[] = [];
+  for (const url of urls) {
+    recipes = recipes.concat(await scrap(url));
+  }
 
   // Save in resultObject
   await agent.setResultObject(recipes);
-
-  // const json_url = await agent.saveText(
-  //   JSON.stringify(recipes),
-  //   "recipes.json",
-  //   "application/json"
-  // );
-  // return json_url;
 };
 
 (async () => {
@@ -231,7 +245,7 @@ const main = async () => {
     console.log("Let's cook dem delicious dishes! 🥪");
     process.exit(0);
   } catch (error) {
-    console.error(`No cookin for you 😢 : ${error}`);
+    console.error(`No cookin for you 😢 : ${JSON.stringify(error)}`);
     process.exit(1);
   }
 })();
